@@ -60,7 +60,7 @@ class Ui_Form(object):
 
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QMessageBox
 from PyQt5 import QtCore, QtGui, QtWidgets
-
+user = ''
 movie = ''
 seance = ''
 class SeatSelectionWindow(QWidget):
@@ -193,22 +193,22 @@ class SeatSelectionWindow(QWidget):
             button.setStyleSheet("background-color: rgb(188, 249, 255);")  
 
     def buy_seat(self):
-        requests.get('https://baktygulova.pythonanywhere.com/booking_seats', params={'movie':movie, 'seance':seance, 'seats':','.join(self.booked_seats)})
-        QMessageBox.information(self, "Success", "Seats booked successfully!")
-    
+        requests.get('https://baktygulova.pythonanywhere.com/booking_seats', 
+                    params={'movie': movie,'user': user, 'seance': seance, 'seats': ','.join(self.booked_seats)})
+        
     def go_back(self):
-        self.close()
-        if self.previous_window:
-            self.previous_window.show()
+            self.close()
+            if self.previous_window:
+                self.previous_window.show()
 
     def showEvent(self, event):
-        for button_name in self.booked_seats:
-            if button_name in self.buttons:
-                button = self.buttons[button_name]
-                button.setStyleSheet("background-color: rgb(102, 255, 120);")  
-                
-                button.setEnabled(False)
-        super().showEvent(event)
+            for button_name in self.booked_seats:
+                if button_name in self.buttons:
+                    button = self.buttons[button_name]
+                    button.setStyleSheet("background-color: rgb(102, 255, 120);")  
+                    
+                    button.setEnabled(False)
+            super().showEvent(event)
 
 
 
@@ -246,7 +246,7 @@ class UserHistoryWindow(QWidget):
         self.pushButton_39.clicked.connect(self.close)
 
         self.plainTextEdit = QPlainTextEdit(self)
-        self.plainTextEdit.setGeometry(QtCore.QRect(110, 150, 181, 61))
+        self.plainTextEdit.setGeometry(QtCore.QRect(50, 100, 301, 131))
         self.plainTextEdit.setStyleSheet("background-color: rgb(171, 255, 246);")
         self.plainTextEdit.setPlainText("")  # История пустая по умолчанию
         self.plainTextEdit.setReadOnly(True)  # Сделать поле только для чтения
@@ -258,20 +258,11 @@ class UserHistoryWindow(QWidget):
             QMessageBox.warning(self, "Input Error", "Please enter your username.")
             return
 
-        if user_name not in users_history:
-            QMessageBox.warning(self, "User Not Found", "No history found for this user.")
-            return
-
-        user_history = users_history[user_name]
-        movie = user_history['movie']
-        seance = user_history['seance']
-
-        history_text = f"Selected Movie: {movie}\nSeance Time: {seance}"
-
+        response = requests.get('https://baktygulova.pythonanywhere.com/get_user_history',
+                                params={'user': user_name}).json()
+    
+        history_text = "\n".join(response)
         self.plainTextEdit.setPlainText(history_text)
-        
-        self.textEdit_2.setEnabled(False)
-        self.pushButton_40.setEnabled(False) 
 
 from PyQt5.QtWidgets import QWidget, QLineEdit, QPushButton, QLabel, QVBoxLayout, QHBoxLayout
 from PyQt5.QtCore import Qt
@@ -406,6 +397,8 @@ class PostRegistrationWindow(QWidget):
             if i == movie:
                 for k in j['seances'].keys():
                     self.comboBox_2.addItem(k)
+
+    
                 
 
 from PyQt5.QtWidgets import (
@@ -478,9 +471,12 @@ class LoginWindow(QWidget):
                         params={'user': username, 'password': password}
                     )
                     if password_response.status_code == 200 and password_response.json():
+                        global user
+                        user = username
                         QMessageBox.information(self, "Welcome", "Welcome Back!")
                         self.post_registration_window = PostRegistrationWindow()
                         self.post_registration_window.show()
+
                         self.close()
                     else:
                         QMessageBox.warning(self, "Error", "Incorrect password.")
@@ -550,7 +546,6 @@ class Admin_page(QtWidgets.QWidget):
         self.pushButton_7.setText("Remove")
         self.pushButton_7.clicked.connect(self.remove_movie)
 
-        # Метки и текстовые поля
         font = QtGui.QFont()
         font.setPointSize(12)
         
@@ -576,12 +571,7 @@ class Admin_page(QtWidgets.QWidget):
         self.textEdit_4.setGeometry(QtCore.QRect(210, 280, 181, 41))
         self.textEdit_4.setStyleSheet("background-color: rgb(236, 255, 231);")
 
-        # Кнопка Back
-        self.back_button = QtWidgets.QPushButton(Form)
-        self.back_button.setGeometry(QtCore.QRect(150, 400, 93, 28))
-        self.back_button.setStyleSheet("background-color: rgb(255, 120, 120);")
-        self.back_button.setText("Back")
-        self.back_button.clicked.connect(self.go_back)
+    
 
         self.get_movies()
 
@@ -604,8 +594,11 @@ class Admin_page(QtWidgets.QWidget):
     def remove_movie(self):
         movie_name = self.listWidget.currentItem().text()
         requests.get('https://baktygulova.pythonanywhere.com/remove_movie', params={'movie': movie_name})
-        self.listWidget.clear()
+        
         self.listWidget_3.clear()
+
+        self.listWidget.clear()
+        self.get_movies()
 
     def on_movie_selected(self, item):
         self.listWidget_3.clear()
@@ -613,12 +606,7 @@ class Admin_page(QtWidgets.QWidget):
         for time in requests.get('http://baktygulova.pythonanywhere.com/get_movies', params={'movie': movie_name}).json()[movie_name]['seances'].keys():
             self.listWidget_3.addItem(time)
 
-    def go_back(self):
-        """Метод для возврата к предыдущему окну."""
-        if self.previous_window:
-            self.previous_window.show()  # Показываем предыдущее окно
-        self.close()  # Закрываем текущее окно
-
+   
 class RegistrationWindow(QWidget):
     def __init__(self, parent_window=None):
         super().__init__()
@@ -709,5 +697,3 @@ if __name__ == "__main__":
     registration_window = RegistrationWindow(parent_window=login_window)  # Передаём ссылку на главное окно
     login_window.show()
     sys.exit(app.exec_())
-
-
