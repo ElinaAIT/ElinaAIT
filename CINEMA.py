@@ -322,6 +322,7 @@ class MovieInfoWindow(QWidget):
             "Moana": {
                 "genre": "Animation",
                 "description": "Действие фильма происходит в древнем мире Океании. Юная и смелая девушка Моана, дочь вождя островного племени, отправляется в опасное и увлекательное путешествие по океану, чтобы спасти свой народ.."
+
             }
         }
 
@@ -503,6 +504,8 @@ class LoginWindow(QWidget):
         self.admin_window = Admin_page()
         self.admin_window.setupUi(self.window)
         self.window.show()
+ 
+
 
 from PyQt5.QtWidgets import (
     QWidget, QPlainTextEdit, QPushButton, QLabel, QMessageBox
@@ -687,3 +690,6 @@ if __name__ == "__main__":
     registration_window = RegistrationWindow(parent_window=login_window)  # Передаём ссылку на главное окно
     login_window.show()
     sys.exit(app.exec_())
+
+
+# привееет
