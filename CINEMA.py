@@ -217,8 +217,7 @@ from PyQt5.QtWidgets import QWidget, QLabel, QTextEdit, QPushButton, QPlainTextE
 from PyQt5 import QtCore
 
 users_history = {
-    'elina': {'movie': 'Mulan', 'seance': '19:00'},
-    'bermet': {'movie': 'Avatar', 'seance': '10:30'}
+    
 }
 
 class UserHistoryWindow(QWidget):
@@ -521,35 +520,42 @@ import requests
 import json
 
 class Admin_page(QtWidgets.QWidget):
+    def __init__(self, previous_window=None):  # Добавляем аргумент для предыдущего окна
+        super().__init__()
+        self.previous_window = previous_window
+
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(400, 436)
         Form.setStyleSheet("background-color: rgb(255, 178, 252);")
 
+        # Основные виджеты
         self.listWidget = QtWidgets.QListWidget(Form)
         self.listWidget.setGeometry(QtCore.QRect(10, 50, 161, 192))
         self.listWidget.setStyleSheet("background-color: rgb(217, 242, 255);")
         self.listWidget.setObjectName("listWidget")
         self.listWidget.itemClicked.connect(self.on_movie_selected)
- 
+
         self.pushButton_6 = QtWidgets.QPushButton(Form)
         self.pushButton_6.setGeometry(QtCore.QRect(30, 360, 93, 28))
         self.pushButton_6.setStyleSheet("background-color: rgb(102, 255, 120);")
         self.pushButton_6.setObjectName("pushButton_6")
-        self.pushButton_6.setText("Add")  # Название кнопки "Add"
+        self.pushButton_6.setText("Add")
         self.pushButton_6.clicked.connect(self.add_movie_time)
 
         self.pushButton_7 = QtWidgets.QPushButton(Form)
         self.pushButton_7.setGeometry(QtCore.QRect(270, 360, 93, 28))
         self.pushButton_7.setStyleSheet("background-color: rgb(102, 255, 120);")
         self.pushButton_7.setObjectName("pushButton_7")
-        self.pushButton_7.setText("Remove")  # Название кнопки "Remove"
+        self.pushButton_7.setText("Remove")
         self.pushButton_7.clicked.connect(self.remove_movie)
 
-        self.label = QtWidgets.QLabel(Form)
-        self.label.setGeometry(QtCore.QRect(60, 20, 55, 16))
+        # Метки и текстовые поля
         font = QtGui.QFont()
         font.setPointSize(12)
+        
+        self.label = QtWidgets.QLabel(Form)
+        self.label.setGeometry(QtCore.QRect(60, 20, 55, 16))
         self.label.setFont(font)
         self.label.setText("Movie")
 
@@ -570,8 +576,14 @@ class Admin_page(QtWidgets.QWidget):
         self.textEdit_4.setGeometry(QtCore.QRect(210, 280, 181, 41))
         self.textEdit_4.setStyleSheet("background-color: rgb(236, 255, 231);")
 
-        self.get_movies()
+        # Кнопка Back
+        self.back_button = QtWidgets.QPushButton(Form)
+        self.back_button.setGeometry(QtCore.QRect(150, 400, 93, 28))
+        self.back_button.setStyleSheet("background-color: rgb(255, 120, 120);")
+        self.back_button.setText("Back")
+        self.back_button.clicked.connect(self.go_back)
 
+        self.get_movies()
 
     def add_movie_time(self):
         movie_name = self.textEdit_3.text()
@@ -588,17 +600,24 @@ class Admin_page(QtWidgets.QWidget):
         response = requests.get('http://baktygulova.pythonanywhere.com/get_movies').json()
         for i in response.keys():
             self.listWidget.addItem(i)
+
     def remove_movie(self):
         movie_name = self.listWidget.currentItem().text()
         requests.get('https://baktygulova.pythonanywhere.com/remove_movie', params={'movie': movie_name})
-        self.listWidget.clear()   
-        self.listWidget_3.clear()     
+        self.listWidget.clear()
+        self.listWidget_3.clear()
+
     def on_movie_selected(self, item):
         self.listWidget_3.clear()
         movie_name = item.text()
         for time in requests.get('http://baktygulova.pythonanywhere.com/get_movies', params={'movie': movie_name}).json()[movie_name]['seances'].keys():
             self.listWidget_3.addItem(time)
 
+    def go_back(self):
+        """Метод для возврата к предыдущему окну."""
+        if self.previous_window:
+            self.previous_window.show()  # Показываем предыдущее окно
+        self.close()  # Закрываем текущее окно
 
 class RegistrationWindow(QWidget):
     def __init__(self, parent_window=None):
@@ -692,4 +711,3 @@ if __name__ == "__main__":
     sys.exit(app.exec_())
 
 
-# привееет
