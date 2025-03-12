@@ -54,7 +54,7 @@ class PrintMap {
     }
 }
 
-
+//3 задание
 class Task implements Comparable<Task> {
     String taskName;
     int priority;
